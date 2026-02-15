@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: int_sales_daily_stock
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "daily_net_gmv IS NOT NULL OR is_available IS NOT NULL"
+          config:
+            severity: error
+            error_if: ">0"
+    columns:
+      - name: daily_net_gmv
+        description: "Aggregated sum of signed_gmv for the day/store/product."
+        tests:
+          - not_null:
+              where: "is_available IS NULL"
+              config:
+                severity: warn
+      
+      - name: is_available
+        description: "Stock availability for that day (from fact_stock)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+              config:
+                severity: error
+      
+      # - name: transaction_channel_type
+      #   description: >
+      #     Sales channel.
+      #     Note: Can be NULL if no sales occurred that day (row coming from stock only).
+      #   tests:
+      #     - accepted_values:
+      #         values: ['Online', 'Offline', 'marketplace', 'app']
+      #         config:
+      #           severity: warn
+      #           where: "transaction_channel_type IS NOT NULL"

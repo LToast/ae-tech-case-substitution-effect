@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: stg_fact_sales
+    description: >
+      Cleaned raw transactions table.
+      Applied filter: Order cancellations are excluded.
+    columns:
+      - name: transaction_id
+        description: "Primary key of the transaction."
+        tests:
+          - unique
+          - not_null
+      - name: signed_gmv
+        description: >
+          GMV (Gross Merchandise Value) with applied sign.
+          BUSINESS LOGIC: 
+          - If type = 'purchase', the value is positive.
+          - If type = 'return', the value is converted to negative (-1 * abs(gmv)).
+          This allows simple SUM() operations to obtain Net GMV.
+      - name: is_return
+        description: "Binary flag (1/0) indicating if the row is a return."
+
+  - name: stg_fact_stock
+    description: "Daily snapshot of stock by store and product."
+    columns:
+      - name: stock_date
+        tests:
+          - not_null
+      - name: top_available_stock
+        description: >
+          Real availability indicator.
+          BUSINESS LOGIC: Used as a validity filter for cannibalization analysis (we don't compare items that aren't purchasable).
+
+  - name: stg_dim_model
+    description: "Reference table for items and models (size, weight, type)."
+    columns:
+      - name: item_code
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_dim_store
+    description: "Reference table for stores (location, area)."
+    columns:
+      - name: store_code
+        tests:
+          - unique
+          - not_null

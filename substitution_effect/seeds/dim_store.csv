@@ -1,0 +1,10 @@
+store_code,sales_area,location,is_tested_region,family_range
+1,2000,suburbs,true,3
+2,1500,suburbs,false,2
+3,1800,city,true,2
+4,2200,suburbs,true,3
+5,1600,city,true,1
+6,1900,suburbs,true,2
+7,2100,city,true,3
+8,1700,suburbs,true,2
+9,2000,city,true,1

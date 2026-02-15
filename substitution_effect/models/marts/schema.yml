@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: mrt_kpi_dashboard
+    description: >
+      Final (Gold) table for BI tools (PowerBI/Tableau).
+      Contains all pre-calculated metrics for cannibalization test analysis.
+      Databricks optimization: Partitioned by date_day and Clustered by store_code.
+    columns:
+      - name: daily_net_gmv
+        description: >
+          PRIMARY KPI: Net Revenue.
+          Formula: Gross Sales - Returns.
+          Note: Does not include COGS (gross margin), this is Net Revenue.
+        tests:
+          - not_null
+
+      
+      - name: cannibalization_segment
+        description: >
+          Segmentation for A/B test.
+
+            - 'Target': The 10kg dumbbell kit product experiencing the loss.
+            - 'Direct Substitute': The 20kg dumbbell kit (upgrade alternative).
+            - 'Indirect Substitute': Weight plates (functional alternative).
+            - 'Other': Other products not in the test scope.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Target', 'Direct Substitute', 'Indirect Substitute', 'Other']
+      
+      - name: is_stock_valid_for_analysis
+        description: >
+          CRITICAL FILTER: Validity flag for comparative analysis.
+          If False, it means the product was out of stock that day.
+          BI Recommendation: Filter on TRUE to compare Test vs Control sales to avoid logistical bias.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      
+      - name: stock_days_available
+        description: >
+          Numerator for stock availability rate calculation (Stock Availability %).
+          To be summed over the desired time period.
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      
+      - name: stock_days_expected
+        description: >
+          Denominator for stock availability rate calculation.
+          Indicates that the product was expected to be on shelf (top_suivi = True).
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+
+      - name: is_tested_region
+        description: "Geographic dimension to separate Test group from Control group."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      
+      - name: store_code
+        description: "Unique identifier for store location."
+        tests:
+          - not_null
+      
+      - name: date_day
+        description: "Date partition key for the analysis."
+        tests:
+          - not_null
+    
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - store_code
+            - date_day
+            - cannibalization_segment
