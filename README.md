@@ -83,7 +83,10 @@ We followed a standard Layered Architecture optimized for Databricks (Delta Lake
 * **Materialization:** `Table` (Persisted for performance).
 * **The "Fan Trap" Solution:** `int_sales_daily_stock`.
     * We pre-aggregate sales to the `Day/Store/Item` level *before* joining stock.
-    * **Join Strategy:** `FULL OUTER JOIN` is used to preserve days with stock but no sales (for availability calculation) and days with sales but missing stock info (for data quality audit).
+        * **Join Strategy:** `FULL OUTER JOIN` preserves days with stock but no sales (for availability calculation) and days with sales but missing stock info (for data quality audit).
+* **Temporal Control Design:** Seed file `ref_test_periods` defines baseline (Weeks 28-34) and test period (Weeks 35-41).
+    * **Column:** `test_period_type` in `mrt_kpi_dashboard`.
+    * **Benefit:** Enables Before/After comparison to isolate test effect from seasonality.
 
 ### Marts (Gold)
 * **Materialization:** `Table`.
@@ -166,3 +169,32 @@ Currently, `dim_model` is a Type 1 dimension (overwritten).
     * **Strategy:** `check` strategy.
     * **Config:** `target_schema='snapshots'`, `unique_key='item_code'`, `check_cols=['product_weight', 'range_item']`.
     * **Benefit:** Allows us to replay history accurately even if product attributes change over time.
+
+# 3. Dashboard Design & UX
+
+## Philosophie : "Decision-First"
+L'objectif de ce dashboard est de permettre au Directeur Commercial de valider ou rejeter l'hypothèse de suppression du produit en moins de 10 secondes. L'interface est structurée selon une logique pyramidale (Top-Down) : du verdict financier global vers l'explication analytique détaillée.
+
+## Architecture des Indicateurs
+
+### 1. The Verdict (Header & Financial Impact)
+C'est la zone critique située en haut du dashboard. Elle répond immédiatement à la question : *"Est-ce rentable ?"*.
+* **Cannibalization Rate (%) :** Le KPI maître. Il représente le ratio de récupération du CA.
+    * *Lecture :* Si > 100%, le report de vente vers les substituts (20kg, disques) est supérieur à la perte du 10kg.
+* **Net Impact Bridge (€) :** Une équation visuelle simple pour expliquer la mécanique financière :
+    * `[Gain Substituts] - [Perte Target 10kg] = [Résultat Net]`
+
+### 2. Commercial Dynamics (Business Context)
+Cette section permet de comprendre *comment* le résultat est obtenu, à travers les 3 métriques demandées :
+* **Net GMV :** Volume d'affaires global (net de retours).
+* **Quantities Sold :** Permet de vérifier si le report se fait sur des volumes équivalents ou si l'on vend moins d'unités (risque de perte de trafic).
+* **Transactions Count :** Surveille la fréquentation du rayon. Une baisse ici indiquerait que le retrait du produit 10kg fait fuir les clients sans achat de substitution.
+
+### 3. The Proof (Temporal View)
+* **Stacked Area Chart :** Une visualisation temporelle (Semaines 35-41) comparant la courbe de vente "Test" vs "Control".
+* **Objectif :** Visualiser la rupture de tendance au moment du lancement du test (Semaine 35) et confirmer que la hausse des substituts est bien corrélée à la suppression du 10kg.
+
+### 4. Quality Guardrails (Fiabilité)
+Pour garantir l'honnêteté intellectuelle de l'analyse, deux indicateurs de contexte sont affichés en pied de page :
+* **Stock Availability Rate :** Si le stock des substituts (20kg) est faible (<90%), le test est invalidé car le report de vente est physiquement impossible.
+* **Online In-Store Share :** Surveille le taux de commandes via tablette vendeur. Une hausse anormale signifierait une friction client (le client "force" l'achat du 10kg indisponible).

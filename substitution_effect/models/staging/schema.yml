@@ -47,3 +47,14 @@ models:
         tests:
           - unique
           - not_null
+  - name: test_period_type
+    description: >
+          Segmentation Temporelle critique pour le test A/B.
+          Valeurs :
+          - 'Pre-Test' : 7 semaines avant le test (Baseline).
+          - 'Test Period' : Les 7 semaines du test (Intervention).
+          Permet de calculer le 'Lift' (Croissance) par rapport à la normale.
+    tests:
+      - not_null
+      - accepted_values:
+          values: ['Pre-Test', 'Test Period', 'Out of Scope']
