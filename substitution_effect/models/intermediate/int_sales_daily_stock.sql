@@ -23,13 +23,13 @@ with daily_sales as (
         transaction_date,
         store_code,
         item_code,
-        -- transaction_channel_type, -- Keep this for Online/Offline analysis
+        transaction_channel_type, -- Keep this for Online/Offline analysis
         sum(signed_gmv) as daily_net_gmv,
         sum(case when item_operation_type = 'sale' then quantity else 0 end) as quantity_sold,
         sum(case when item_operation_type = 'return' then quantity else 0 end) as quantity_returned,
         count(distinct transaction_id) as nb_transactions
     from {{ ref('stg_fact_sales') }}
-    group by 1, 2, 3
+    group by 1, 2, 3, 4
 ),
 
 stock as (
@@ -46,7 +46,7 @@ joined as (
         coalesce(s.item_code, d.item_code) as item_code,
         
         -- Dimensions
-        -- d.transaction_channel_type, -- Note: NULL if no sales on that day
+        d.transaction_channel_type, -- Note: NULL if no sales on that day
         
         -- Sales Metrics
         coalesce(d.daily_net_gmv, 0) as daily_net_gmv,

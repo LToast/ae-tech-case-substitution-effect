@@ -39,7 +39,7 @@ select
     {{ get_cannibalization_segment('model_name', 'product_nature') }} as cannibalization_segment,
 
     -- Handle NULL channel when there's no sale (pure stock days)
-    -- coalesce(f.transaction_channel_type, 'N/A') as channel_type,
+    coalesce(f.transaction_channel_type, 'N/A') as channel_type,
 
     -- KPI 1: Net GMV
     f.daily_net_gmv,

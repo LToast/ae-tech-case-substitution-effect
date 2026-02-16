@@ -18,13 +18,10 @@ cleaned as (
         case 
             when item_operation_type = 'return' then -1 * abs(gmv)
             else gmv 
-        end as signed_gmv,
-
-        -- Useful flag for analysis
-        case when item_operation_type = 'return' then 1 else 0 end as is_return
+        end as signed_gmv
 
     from source
-    where transaction_channel_type != 'Online' -- Exclude Online channel as per analysis scope
+    --where transaction_channel_type != 'Online' -- Exclude Online channel as per analysis scope
 )
 
 select * from cleaned
