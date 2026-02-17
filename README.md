@@ -172,29 +172,102 @@ Currently, `dim_model` is a Type 1 dimension (overwritten).
 
 # 3. Dashboard Design & UX
 
-## Philosophie : "Decision-First"
-L'objectif de ce dashboard est de permettre au Directeur Commercial de valider ou rejeter l'hypothèse de suppression du produit en moins de 10 secondes. L'interface est structurée selon une logique pyramidale (Top-Down) : du verdict financier global vers l'explication analytique détaillée.
+## Philosophy: "Decision-First"
+The goal of this dashboard is to allow the Commercial Director to validate or reject the product removal hypothesis in less than 10 seconds. The interface is structured according to a pyramidal logic (Top-Down): from the overall financial verdict to the detailed analytical explanation.
 
-## Architecture des Indicateurs
+## Indicator Architecture
 
 ### 1. The Verdict (Header & Financial Impact)
-C'est la zone critique située en haut du dashboard. Elle répond immédiatement à la question : *"Est-ce rentable ?"*.
-* **Cannibalization Rate (%) :** Le KPI maître. Il représente le ratio de récupération du CA.
-    * *Lecture :* Si > 100%, le report de vente vers les substituts (20kg, disques) est supérieur à la perte du 10kg.
-* **Net Impact Bridge (€) :** Une équation visuelle simple pour expliquer la mécanique financière :
-    * `[Gain Substituts] - [Perte Target 10kg] = [Résultat Net]`
+This is the critical zone located at the top of the dashboard. It immediately answers the question: *"Is it profitable?"*.
+* **Cannibalization Rate (%):** The master KPI. It represents the revenue recovery ratio.
+    * *Reading:* If > 100%, the sales transfer to substitutes (20kg, discs) exceeds the loss from the 10kg.
+* **Net Impact Bridge (€):** A simple visual equation to explain the financial mechanics:
+    * `[Substitute Gain] - [10kg Target Loss] = [Net Result]`
 
 ### 2. Commercial Dynamics (Business Context)
-Cette section permet de comprendre *comment* le résultat est obtenu, à travers les 3 métriques demandées :
-* **Net GMV :** Volume d'affaires global (net de retours).
-* **Quantities Sold :** Permet de vérifier si le report se fait sur des volumes équivalents ou si l'on vend moins d'unités (risque de perte de trafic).
-* **Transactions Count :** Surveille la fréquentation du rayon. Une baisse ici indiquerait que le retrait du produit 10kg fait fuir les clients sans achat de substitution.
+This section helps understand *how* the result is obtained, through the 3 requested metrics:
+* **Net GMV:** Overall business volume (net of returns).
+* **Quantities Sold:** Allows verification of whether the transfer occurs in equivalent volumes or if fewer units are being sold (risk of traffic loss).
+* **Transactions Count:** Monitors department foot traffic. A decline here would indicate that removing the 10kg product drives customers away without substitute purchases.
 
 ### 3. The Proof (Temporal View)
-* **Stacked Area Chart :** Une visualisation temporelle (Semaines 35-41) comparant la courbe de vente "Test" vs "Control".
-* **Objectif :** Visualiser la rupture de tendance au moment du lancement du test (Semaine 35) et confirmer que la hausse des substituts est bien corrélée à la suppression du 10kg.
+* **Stacked Area Chart:** A temporal visualization (Weeks 35-41) comparing "Test" vs "Control" sales curves.
+* **Objective:** Visualize the trend break at the test launch (Week 35) and confirm that the increase in substitutes is indeed correlated with the removal of the 10kg.
 
-### 4. Quality Guardrails (Fiabilité)
-Pour garantir l'honnêteté intellectuelle de l'analyse, deux indicateurs de contexte sont affichés en pied de page :
-* **Stock Availability Rate :** Si le stock des substituts (20kg) est faible (<90%), le test est invalidé car le report de vente est physiquement impossible.
-* **Online In-Store Share :** Surveille le taux de commandes via tablette vendeur. Une hausse anormale signifierait une friction client (le client "force" l'achat du 10kg indisponible).
+### 4. Quality Guardrails (Reliability)
+To ensure intellectual honesty in the analysis, two contextual indicators are displayed in the footer:
+* **Stock Availability Rate:** If substitute stock (20kg) is low (<90%), the test is invalidated because sales transfer is physically impossible.
+* **Online In-Store Share:** Monitors the rate of orders via sales tablet. An abnormal increase would signal customer friction (the customer "forces" the purchase of the unavailable 10kg).
+
+## Dashboard Mockup
+### Direct Substitution Dash :
+![direct Substitution Dash](dash-direct.png)
+### Indirect Substitution Dash :
+![Indirect Substitution Dash](dash-indirect.png)
+## Analysis & Recommendation: The Verdict
+
+The dashboard analysis reveals a critical duality in the results, illustrating the importance of properly defining the observation scope:
+
+* **Local Success (Direct Cannibalization: 125%):** For the identified direct substitutes (20kg Kit, Discs), the bet pays off. For every €100 of revenue lost on the 10kg, we recovered €125 on these specific products. Customers accept the upselling.
+* **Global Failure (Indirect Cannibalization: 59.5%):** However, at the full category level ("Weights"), the recovery rate collapses. Removing the entry-level product (10kg) appears to have reduced overall traffic or conversion on other ancillary products.
+* **Recommended Decision:** **STOP.** Despite the success on the 20kg, the overall revenue loss on the category (-40.5% net on the impacted scope) makes removing the 10kg Kit economically dangerous at this stage.
+
+### TODO
+Ajouter les tooltips de définition sur les KPIs
+
+# 4. Next Steps & Industrialisation
+
+Cette analyse initiale permet de visualiser les tendances. Pour passer à l'industrialisation et à la validation scientifique rigoureuse, je recommande les étapes suivantes.
+
+## 4.1. Statistical Validation (Rigorous A/B Testing)
+The current dashboard is descriptive. To confirm that the observed variations are not due to chance, we must formalize the statistical test.
+
+### Hypotheses
+* **Test Type:** "Two-sample t-test" (comparison of means) or ideally a **Difference-in-Differences (DiD)** method to neutralize historical biases between Test and Control stores.
+* **Null Hypothesis ($H_0$):** The removal of the 10kg product has **no positive impact** on the overall GMV of the category ($\mu_{test} - \mu_{control} \le 0$).
+* **Alternative Hypothesis ($H_1$):** The removal generates sufficient sales transfer to maintain or increase GMV ($\mu_{test} - \mu_{control} > 0$).
+
+### Sample Size
+To statistically validate this test in the future, we must define the sample size (number of stores/days) required upfront.
+In a fast-paced Retail context ("Fail Fast"), I recommend a **Confidence Level of 80%** ($\alpha = 0.20$) rather than the academic standard of 95%, in order to accelerate decision-making.
+
+**Calculation Formula (Evan Miller / Cohen's d):**
+
+$$n = \frac{2\sigma^2(z_{\alpha/2} + z_{\beta})^2}{\delta^2}$$
+
+*Where:*
+* $n$ = Required sample size per group.
+* $\alpha = 0.20$ (Accepted risk of false positive).
+* $1-\beta = 0.80$ (Statistical power: probability of detecting an effect if it exists).
+* $\delta$ (Delta) = The minimum detectable effect (e.g., we want to detect at least +2% GMV).
+* $\sigma$ (Sigma) = The historical standard deviation of sales (variance).
+
+## 4.2. Optimisation Databricks & Data Quality
+Au-delà du partitionnement et du Liquid Clustering (déjà intégrés au modèle), l'industrialisation de ce pipeline nécessitera :
+
+1.  **Delta Live Tables (DLT) & Expectations :**
+    * Mise en place de contraintes de qualité strictes (ex: `CONSTRAINT valid_gmv EXPECT gmv > 0`, `EXPECT stock_boolean IS NOT NULL`).
+    * Cela garantit que le dashboard ne s'alimente jamais avec des données corrompues (Stop pipeline on failure).
+
+2.  **Materialized Views (Vues Matérialisées) :**
+    * Plutôt que de recalculer les agrégations complexes (Jointure Ventes + Stock + Calendrier) à chaque ouverture du dashboard, nous créerons une Materialized View dans Databricks SQL.
+    * *Avantage :* Réponse instantanée (<1s) pour l'utilisateur final sur Tableau/PowerBI, même sur des milliards de lignes.
+
+3.  **Serverless SQL Warehouses :**
+    * Using Serverless compute to handle peak loads on Monday mornings (weekend sales analysis) without paying for idle clusters during the rest of the week.
+
+    ## 4.3. Towards "AI-Driven Analytics" (LLM-Ready)
+    To anticipate future needs for natural language querying (Text-to-SQL) by business teams, the data model must be exposed through a **Semantic Layer**.
+
+    The goal is to transform technical documentation into business context for an LLM (such as Databricks Genie or an internal RAG agent).
+
+    1.  **Leveraging dbt Metadata as Context:**
+        * Column descriptions in dbt's `schema.yml` files no longer serve only humans, but become the **"System Prompt"** for AI.
+        * *Action:* Enrich dbt metadata to make calculation rules explicit (e.g., "GMV is gross revenue MINUS returns, not raw sales"). This prevents analytical hallucinations where the AI would invent a margin definition.
+
+    2.  **Semantic Layer & Metrics:**
+        * Rather than letting the AI generate complex `JOIN`s on the fly (a source of errors), we will expose certified metrics (via dbt Semantic Layer or MetricFlow).
+        * *Example:* Define `cannibalization_rate` as an official metric. The user can then ask *"Why is the cannibalization rate dropping in week 38?"* and the AI will query the pre-calculated metric rather than attempt a hazardous division on raw data.
+
+    3.  **AI Governance (Databricks Genie):**
+        * By coupling this metadata (Unity Catalog) with a tool like **Databricks Genie**, we will enable the Commercial Director to explore "Long Tail Questions" (ad-hoc questions not anticipated in the dashboard) autonomously, with the guarantee that the AI respects the semantics defined by the Data team.
