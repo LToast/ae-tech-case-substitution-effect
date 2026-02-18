@@ -4,7 +4,7 @@
     tags=['bi_gold']
 ) }}
 
-with facts as (
+with sales_stocks as (
     select * from {{ ref('int_sales_daily_stock') }}
 ),
 
@@ -44,22 +44,15 @@ select
     -- KPI 1: Net GMV
     f.daily_net_gmv,
 
-    -- KPI 2: Stock Availability (Denominator & Numerator logic)
-    -- Count 1 if product was tracked (expected), and check if it was available
-    case when f.is_tracked then 1 else 0 end as stock_days_expected,
-    case when f.is_tracked and f.is_available then 1 else 0 end as stock_days_available,
-
-    -- KPI 3: Volume
+    -- KPI 2: Volume
     f.quantity_sold,
     f.nb_transactions,
 
-
-
     -- Validity filter for analysis
+    f.is_available as is_stock_valid_for_analysis,
+    f.is_predicted_available as is_predicted_stock_valid_for_analysis
 
-    f.is_available as is_stock_valid_for_analysis
-
-from facts f
+from sales_stocks f
 left join items i on f.item_code = i.item_code
 left join stores s on f.store_code = s.store_code
 -- Simulated "Cross Join" or date-based lookup

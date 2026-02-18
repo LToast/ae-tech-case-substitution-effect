@@ -56,7 +56,7 @@ joined as (
         
         -- Stock Metrics
         coalesce(s.top_available_stock, false) as is_available,
-        coalesce(s.top_suivi, false) as is_tracked
+        coalesce(s.top_suivi, false) as is_predicted_available
 
     from stock s
     full outer join daily_sales d 
