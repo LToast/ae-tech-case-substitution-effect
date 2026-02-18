@@ -27,13 +27,3 @@ models:
               config:
                 severity: error
       
-      # - name: transaction_channel_type
-      #   description: >
-      #     Sales channel.
-      #     Note: Can be NULL if no sales occurred that day (row coming from stock only).
-      #   tests:
-      #     - accepted_values:
-      #         values: ['Online', 'Offline', 'marketplace', 'app']
-      #         config:
-      #           severity: warn
-      #           where: "transaction_channel_type IS NOT NULL"

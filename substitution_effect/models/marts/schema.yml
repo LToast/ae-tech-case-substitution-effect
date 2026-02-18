@@ -7,15 +7,50 @@ models:
       Contains all pre-calculated metrics for cannibalization test analysis.
       Databricks optimization: Partitioned by date_day and Clustered by store_code.
     columns:
-      - name: daily_net_gmv
-        description: >
-          PRIMARY KPI: Net Revenue.
-          Formula: Gross Sales - Returns.
-          Note: Does not include COGS (gross margin), this is Net Revenue.
+      - name: date_day
+        description: "Date partition key for the analysis."
         tests:
           - not_null
 
-      
+      - name: test_period_type
+        description: >
+          Timeline segmentation for the A/B test.
+          Values: 'Pre-Test', 'Test Period', 'Out of Scope'.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Pre-Test', 'Test Period', 'Out of Scope']
+
+      - name: store_code
+        description: "Unique identifier for store location."
+        tests:
+          - not_null
+
+      - name: location
+        description: "Geographic location of the store."
+        tests:
+          - not_null
+
+      - name: is_tested_region
+        description: "Geographic dimension to separate Test group from Control group."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: item_code
+        description: "Unique identifier for the product/item."
+        tests:
+          - not_null
+
+      - name: model_name
+        description: "Product model name from item dimension."
+
+
+      - name: product_nature
+        description: "Product category or nature from item dimension."
+ 
+
       - name: cannibalization_segment
         description: >
           Segmentation for A/B test.
@@ -28,57 +63,57 @@ models:
           - not_null
           - accepted_values:
               values: ['Target', 'Direct Substitute', 'Indirect Substitute', 'Other']
-      
+
+      - name: channel_type
+        description: >
+          Transaction channel type (e.g., Online, In-Store).
+          Coalesced to 'N/A' when there's no sale (pure stock days).
+        tests:
+          - not_null
+
+      - name: daily_net_gmv
+        description: >
+          PRIMARY KPI: Net Revenue.
+          Formula: Gross Sales - Returns.
+          Note: Does not include COGS (gross margin), this is Net Revenue.
+        tests:
+          - not_null
+
+      - name: quantity_sold
+        description: "KPI 2: Total quantity of items sold."
+        tests:
+          - not_null
+
+      - name: nb_transactions
+        description: "KPI 2: Number of transactions."
+        tests:
+          - not_null
+
       - name: is_stock_valid_for_analysis
         description: >
-          CRITICAL FILTER: Validity flag for comparative analysis.
+          CRITICAL FILTER: Validity flag for comparative analysis (is_available).
           If False, it means the product was out of stock that day.
           BI Recommendation: Filter on TRUE to compare Test vs Control sales to avoid logistical bias.
         tests:
           - not_null
           - accepted_values:
               values: [true, false]
-      
-      - name: stock_days_available
-        description: >
-          Numerator for stock availability rate calculation (Stock Availability %).
-          To be summed over the desired time period.
-        tests:
-          - not_null
-          - dbt_utils.accepted_range:
-              min_value: 0
-              inclusive: true
-      
-      - name: stock_days_expected
-        description: >
-          Denominator for stock availability rate calculation.
-          Indicates that the product was expected to be on shelf (top_suivi = True).
-        tests:
-          - not_null
-          - dbt_utils.accepted_range:
-              min_value: 0
-              inclusive: true
 
-      - name: is_tested_region
-        description: "Geographic dimension to separate Test group from Control group."
+      - name: is_predicted_stock_valid_for_analysis
+        description: >
+          Predicted stock availability flag (is_predicted_available).
+          Used for forecasting and analysis of future stock validity.
         tests:
           - not_null
           - accepted_values:
               values: [true, false]
-      
-      - name: store_code
-        description: "Unique identifier for store location."
-        tests:
-          - not_null
-      
-      - name: date_day
-        description: "Date partition key for the analysis."
-        tests:
-          - not_null
-    
+
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
             - store_code
             - date_day
-            - cannibalization_segment
+            - item_code
+            - channel_type
+            - test_period_type
+            - is_tested_region
